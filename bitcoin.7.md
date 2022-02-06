@@ -121,6 +121,50 @@ The incentive can also be funded with transaction fees. If the output value of a
 
 The incentive may help encourage nodes to stay honest. If a greedy attacker is able to assemble more CPU power than all the honest nodes, he would have to choose between using it to defraud people by stealing back his payments, or using it to generate new coins. He ought to find it more profitable to play by the rules, such rules that favour him with more new coins than everyone else combined, than to undermine the system and the validity of his own wealth.
 
+## Reclaiming Disk Space
+
+Once the latest transaction in a coin is buried under enough blocks, the spent transactions before it can be discarded to save disk space. To facilitate this without breaking the block's hash, transactions are hashed in a Merkle Tree [^7] [^2] [^5], with only the root included in the block's hash. Old blocks can then be compacted by stubbing off branches of the tree. The interior hashes do not need to be stored.
+
+```
+┌──────────────────────────────────────────┐    ┌──────────────────────────────────────────┐
+│                                          │    │                                          │
+│ Block ┌─────────────────────────────┐    │    │ Block ┌─────────────────────────────┐    │
+│       │  Block Header (Block Hash)  │    │    │       │  Block Header (Block Hash)  │    │
+│       │ ┌────────────┐ ┌─────────┐  │    │    │       │ ┌────────────┐ ┌─────────┐  │    │
+│       │ │ Prev Hash  │ │ Nonce   │  │    │    │       │ │ Prev Hash  │ │ Nonce   │  │    │
+│       │ └────────────┘ └─────────┘  │    │    │       │ └────────────┘ └─────────┘  │    │
+│       │                             │    │    │       │                             │    │
+│       │     ┌─────────────┐         │    │    │       │     ┌─────────────┐         │    │
+│       │     │  Root Hash  │         │    │    │       │     │  Root Hash  │         │    │
+│       │     └─────▲─▲─────┘         │    │    │       │     └─────▲─▲─────┘         │    │
+│       │           │ │               │    │    │       │           │ │               │    │
+│       │           │ │               │    │    │       │           │ │               │    │
+│       └───────────┼─┼───────────────┘    │    │       └───────────┼─┼───────────────┘    │
+│                   │ │                    │    │                   │ │                    │
+│     ..........    │ │     ..........     │    │     ┌────────┐    │ │     ..........     │
+│     .        ─────┘ └─────.        .     │    │     │        ├────┘ └─────.        .     │
+│     . Hash01 .            . Hash23 .     │    │     │ Hash01 │            . Hash23 .     │
+│     .▲.....▲..            .▲.....▲..     │    │     │        │            .▲.....▲..     │
+│      │     │               │     │       │    │     └────────┘             │     │       │
+│      │     │               │     │       │    │                            │     │       │
+│      │     │               │     │       │    │                            │     │       │
+│ .....│.. ..│.....     .....│.. ..│.....  │    │                       ┌────┴─┐ ..│.....  │
+│ .      . .      .     .      . .      .  │    │                       │      │ .      .  │
+│ .Hash0 . .Hash1 .     .Hash2 . .Hash3 .  │    │                       │Hash2 │ .Hash3 .  │
+│ ...▲.... ...▲....     ...▲.... ...▲....  │    │                       │      │ .      .  │
+│    │        │            │        │      │    │                       └──────┘ ...▲....  │
+│    │        │            │        │      │    │                                   │      │
+│    │        │            │        │      │    │                                   │      │
+│ ┌──┴───┐ ┌──┴───┐     ┌──┴───┐ ┌──┴───┐  │    │                                ┌──┴───┐  │
+│ │ Tx0  │ │ Tx1  │     │ Tx2  │ │ Tx3  │  │    │                                │ Tx3  │  │
+│ └──────┘ └──────┘     └──────┘ └──────┘  │    │                                └──────┘  │
+│                                          │    │                                          │
+└──────────────────────────────────────────┘    └──────────────────────────────────────────┘
+     Transactions Hashed in a Merkle Tree              After Pruning Tx0-2 from the Block
+```
+
+A block header with no transactions would be about 80 bytes. If we suppose blocks are generated every 10 minutes, 80 bytes * 6 * 24 * 365 = 4.2MB per year. With computer systems typically selling with 2GB of RAM as of 2008, and Moore's Law predicting current growth of 1.2GB per year, storage should not be a problem even if the block headers must be kept in memory.
+
 [^1]: W. Dai, "b-money," http://www.weidai.com/bmoney.txt, 1998. 
 [^2]: H. Massias, X.S. Avila, and J.-J. Quisquater, "Design of a secure timestamping service with minimal trust requirements," In *20th Symposium on Information Theory in the Benelux*, May 1999. 
 [^3]: S. Haber, W.S. Stornetta, "How to time-stamp a digital document," In *Journal of Cryptology*, vol 3, no 2, pages 99-111, 1991. 
