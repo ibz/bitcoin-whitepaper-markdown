@@ -323,8 +323,6 @@ double AttackerSuccessProbability(double q, int z)
 ```
 Running some results, we can see the probability drop off exponentially with z.
 
-Running some results, we can see the probability drop off exponentially with \( z \).
-
 ```plaintext
 q=0.1
 z=0 P=1.0000000
